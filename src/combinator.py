@@ -7,9 +7,9 @@ mapping = {
 	'N': 'noun',							
 	'p': 'plural', 
 	'h': 'noun_phrase',
-	'V': 'verb', 	#(usu participle)
-	't': 'verb', 	#(transitive)
-	'i': 'verb', 	#(intransitive)
+	'V': 'verb', 			#(usu participle)
+	't': 'transitive_verb', 	#(transitive)
+	'i': 'intransitive_verb', 	#(intransitive)
 	'A': 'adjective',
 	'v': 'adverb',
 	'C': 'conjunction',
