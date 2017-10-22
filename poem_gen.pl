@@ -13,6 +13,8 @@
 % parse_verse([], Structure, Sylllables, Rhythm).
 % parse_verse([Word|Tail], [Role|RT], Syllables, Rh) :- prop(Word, word, Role, Syllables, Rhythm).
 
+% consult('dictionary.pl').
+
 word(the, [definite_article, adverb, preposition], [[t͟hə]], [[0]]).
 word(modest, [adjective], [[m,ä,d,əst]], [[1,0]]).
 word(rose, [noun, adjective], [[r,ōz]], [[1]]).
