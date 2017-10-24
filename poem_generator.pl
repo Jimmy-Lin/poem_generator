@@ -15,6 +15,7 @@
 
 :- consult('dictionary.pl').
 
+% General Dictionary Template
 % word(the, [definite_article, adverb, preposition], [[t͟hə]], [[0]]).
 % word(modest, [adjective], [[m,ä,d,əst]], [[1,0]]).
 % word(rose, [noun, adjective], [[r,ōz]], [[1]]).
@@ -29,17 +30,44 @@
 
 % Aggregate all words in the dictionary
 words(Words) :- aggregate_all(set(Word), word(Word, _, _, _), Words).
+is_word(Word) :- word(Word, _, _, _).
+not_word(Word) :- \+ is_word(Word).
+roles(RoleType) :- aggregate_all(set(Role), word(_, Role, _, _), RolesList), flatten(RolesList, Roles), list_to_set(Roles, RolesSet), member(RoleType, RolesSet).
+% Possible roles in dictionary
+% R = adjective ;
+% R = adverb ;
+% R = verb ;
+% R = interjection ;
+% R = intransitive_verb ;
+% R = noun ;
+% R = transitive_verb ;
+% R = preposition ;
+% R = plural ;
+% R = conjunction ;
+% R = pronoun ;
+% R = definite_article ;
+% R = noun_phrase.
 
 % Reuse cfg_simple.pl for core of sentence structure
 % Can be extended with other structures at a higher level
-sentence(L0,L2) :- 
+
+compound_sentence(L0, L2) :-
+    simple_sentence(L0,L1),
+    compounding_phrase(L1,L2).
+
+compounding_phrase(L, L).
+compounding_phrase(L0, L2) :-
+    conjunction(L0, L1),
+    simple_sentence(L1, L2).
+
+simple_sentence(L0,L2) :- % independent clause
     noun_phrase(L0,L1), 
     verb_phrase(L1,L2).
 
 noun_phrase(L0,L4) :- 
     det(L0,L1), 
     adjectives(L1,L2), 
-    noun(L2,L3), 
+    pronoun_or_noun(L2,L3), 
     pp(L3,L4).
 
 % an optional noun phrase is either nothing or a noun phrase
@@ -61,28 +89,53 @@ pp(L0,L2) :-
    noun_phrase(L1,L2).
 
 % adjectives is a sequence of adjectives
-adjectives(L,L).
-adjectives(L0,L2) :-
+% modified this to at most 3 consecutive adjectives to prevent infinite sequence
+adjectives(Start, Finish) :- adjectives(Start, Finish, 3).
+adjectives(Start, Start, _).
+adjectives(L0, L2, N) :- 
+    N > 0,
     adj(L0,L1),
-    adjectives(L1,L2).
+    adjectives(L1,L2, N-1).
+
 
 % Dictionary to word mapping
+
+det([Term|L],L) :- word_to_roles(Term, Roles), article(Roles).
 det(L,L).
-det([a | L],L).
-det([the | L],L).
 
-noun([student | L],L).
-noun([course | L],L).
-noun([computer | L],L).
+article(Roles) :- member(article, Roles).
+article(Roles) :- member(indefinite_article, Roles).
+article(Roles) :- member(definite_article, Roles).
 
-adj([practical | L],L).
-adj([new | L],L).
-adj([computer, science | L],L).
+% Possible roles in dictionary
+% R = adjective ;
+% R = adverb (not in use);
+% R = verb ;
+% R = interjection (not in use);
+% R = intransitive_verb (not in use);
+% R = noun ;
+% R = transitive_verb (not in use);
+% R = preposition ;
+% R = plural (not in use);
+% R = conjunction ;
+% R = pronoun ;
+% R = definite_article ;
 
-verb([passed | L],L).
-verb([failed | L],L).
-
-preposition([with | L],L).
+pronoun_or_noun([Term|L], L) :- pronoun([Term|L], L).
+pronoun_or_noun([Term|L], L) :- noun([Term|L], L).
+pronoun([Term|L], L) :- word_to_roles(Term, Roles), member(pronoun, Roles).
+noun([Term|L], L) :- word_to_roles(Term, Roles), member(noun, Roles).
+adj([Term | L],L) :- word_to_roles(Term, Roles), member(adjective, Roles).
+verb([Term | L],L) :- word_to_roles(Term, Roles), member(verb, Roles).
+transitive_verb([Term | L],L) :- word_to_roles(Term, Roles), member(transitive_verb, Roles).
+intransitive_verb([Term | L],L) :- word_to_roles(Term, Roles), member(intransitive_verb, Roles).
+adverb([Term | L],L) :- word_to_roles(Term, Roles), member(adverb, Roles).
+interjection([Term | L],L) :- word_to_roles(Term, Roles), member(interjection, Roles).
+conjunction([Term | L],L) :- word_to_roles(Term, Roles), member(conjunction, Roles).
+coordinating_conjunction([Term | L],L) :- word_to_roles(Term, Roles), member(coordinating_conjunction, Roles).
+subordinating_conjunction([Term | L],L) :- word_to_roles(Term, Roles), member(subordinating_conjunction, Roles).
+plural([Term | L],L) :- word_to_roles(Term, Roles), member(plural, Roles).
+preposition([Term | L],L) :- word_to_roles(Term, Roles), member(preposition, Roles).
 
 % Utility list operations
 
@@ -173,6 +226,7 @@ rhythm_match(A, B) :-
 
 % Ensure sequences A and B match on rhyme and rhythm criteria
 match(A, B) :-
+    compound_sentence(A, []), compound_sentence(B, []), 
     % writef('Verifying Rhyme: %w - %w \n', [A, B]),
     rhyme_match(A, B),
     % writef('Verifying Rhythm: %w - %w \n', [A, B]),
@@ -191,13 +245,82 @@ generate_match(A, B) :-
     writef('Verifying Sequence: %w \n', [B]),
     match(A, B).
 
-% TODO: Implement sentence parser
+% TODO: Given a matrix representation of the input verse, find a mirror verse in the following method
+% If a line in the source matrix rhymes with a N-lines above it, the mirror verse should rhyme with those mirrored lines above it
+% If a line in the source matrix as X rhythm, the mirror line should also have X as it's rhythm
+% all mirror lines should be a valid compound sentence
 
-% TODO: Implement String to atom parser, should normalize case to lowercase
-string_to_sequence.
-verse_to_strings.
 
+% Revise Search Order to perform intermediate checks.
 
 % TODO: Implement Bayesian Objective
 
 % Moon-shot: normalize terms into modal synonym before bayesian scoring
+
+
+% Crazy string parsing to validate knowledge of vocabulary, escape characters, and convert verses to and from atom matrices.
+
+string_to_sequence(Line, Words) :- split_string(Line, '\s\n\t', '\s\n\t,.?!:;', Strings), strings_to_atoms(Strings, Words).
+strings_to_sequences(Lines, Words) :- strings_to_sequences(Lines, [], Words).
+strings_to_sequences([], State, Words) :- reverse(State, Words).
+strings_to_sequences([H|L], State, Words) :- string_to_sequence(H, Sequence), strings_to_sequences(L, [Sequence|State], Words).
+
+verse_to_strings(Verse, Lines) :- 
+    escape_string(Verse, EscapedVerse),
+    string_lower(EscapedVerse, LowerVerse), 
+    split_string(LowerVerse, '\n', '\s\n\t,.?!:;', Lines).
+verse_to_sequences(Verse, Words) :- 
+    verse_to_strings(Verse, Lines), 
+    strings_to_sequences(Lines, Words).
+
+sequences_to_verse(Sequences, Verse) :- sequences_to_verse(Sequences, [], Verse).
+sequences_to_verse([], State, Verse) :- reverse(State, Lines), atomics_to_string(Lines, '\n', Verse).
+sequences_to_verse([H|L], State, Verse) :- atomics_to_string(H, '\s', String), sequences_to_verse(L, [String|State], Verse).
+
+parse_verse(Verse, Lines) :-
+    unknown_vocabulary(Verse, Unknown),
+    length(Unknown, C), C > 0,
+    writef('Unrecognized Vocabulary: %w', [Unknown]),
+    Lines = [].
+
+parse_verse(Verse, Lines) :-
+    unknown_vocabulary(Verse, Unknown),
+    length(Unknown, C), 
+    C == 0,
+    verse_to_sequences(Verse, Lines).
+
+vocabulary(Verse, Vocabulary) :- 
+    escape_string(Verse, EscapedVerse),
+    string_lower(EscapedVerse, LowerVerse),
+    split_string(LowerVerse, '\s\n\t', '\s\n\t,.?!:;', Strings), 
+    strings_to_atoms(Strings, Words), 
+    list_to_set(Words, Vocabulary).
+
+unknown_vocabulary(String, Unknown) :- 
+    vocabulary(String, Words), 
+    member(Word, Words), 
+    aggregate_all(set(Word), not_word(Word), Unknown).
+
+atoms_to_strings(Atoms, Strings) :- atoms_to_strings(Atoms, [], Strings).
+atoms_to_strings([], State, Strings) :- reverse(State, Strings).
+atoms_to_strings([H|L], State, Strings) :- atom_string(H, String), atoms_to_strings(L, [String|State], Strings).
+
+strings_to_atoms(Strings, Atoms) :- strings_to_atoms(Strings, [], Atoms).
+strings_to_atoms([], State, Atoms) :- reverse(State, Atoms).
+strings_to_atoms([H|L], State, Atoms) :- atom_string(Atom, H), strings_to_atoms(L, [Atom|State], Atoms).
+
+escape_string(X, Y) :-
+    gsub(X, '’', '\'', Y).
+
+gsub(String, Pattern, Replacement, NewString) :-
+    sub_string(String, Before, PatternLength, After, Pattern),
+    ForeBoundary is PatternLength + After,
+    HindBoundary is PatternLength + Before,
+    sub_string(String, 0, Before, ForeBoundary, Forestring),
+    sub_string(String, HindBoundary, After, 0, Hindstring),
+    string_concat(Forestring, Replacement, Mid), 
+    string_concat(Mid, Hindstring, NextString), 
+    gsub(NextString, Pattern, Replacement, NewString).
+gsub(String, Pattern, _, String) :- \+ sub_string(String, _, _, _, Pattern).
+
+string_list(S, L) :- split_string(S, '', '', L).

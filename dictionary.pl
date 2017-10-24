@@ -7288,7 +7288,7 @@ word(electrode, [noun], [[ih, l, eh, k, t, r, ow, d]], [[2, 1, 0]]).
 word(invalid, [noun, adjective, transitive_verb], [[ih, n, v, ah, l, ah, d], [ih, n, v, ah, l, ih, d], [ih, n, v, ae, l, ah, d]], [[1, 0, 0], [1, 0, 0], [2, 1, 0]]).
 word(frighten, [transitive_verb], [[f, r, ay, t, ah, n]], [[1, 0]]).
 word(deflection, [noun], [[d, ih, f, l, eh, k, sh, ah, n]], [[0, 1, 0]]).
-word(an, [noun], [[ae, n], [ah, n]], [[1], [0]]).
+word(an, [indefinite_article, noun], [[ae, n], [ah, n]], [[1], [0]]).
 word(enrapture, [transitive_verb], [[eh, n, r, ae, p, ch, er]], [[0, 1, 0]]).
 word(did, [verb], [[d, ih, d], [d, ih, d]], [[1], [0]]).
 word(enmities, [plural], [[eh, n, m, ah, t, iy, z], [eh, n, m, ih, t, iy, z]], [[1, 0, 0], [1, 0, 0]]).
@@ -21572,7 +21572,7 @@ word(ringed, [adjective], [[r, ih, ng, d]], [[1]]).
 word(wattenberg, [noun], [[w, aa, t, ah, n, b, er, g]], [[1, 0, 0]]).
 word(towson, [noun], [[t, ow, s, ah, n]], [[1, 0]]).
 word(hafnium, [noun], [[hh, ae, f, n, iy, ah, m]], [[1, 0, 0]]).
-word(vice-president, [noun_phrase], [[v, ay, s, p, r, eh, z, ah, d, ah, n, t]], [[1, 1, 0, 0]]).
+word(vice-president, [noun], [[v, ay, s, p, r, eh, z, ah, d, ah, n, t]], [[1, 1, 0, 0]]).
 word(mallin, [noun], [[m, ae, l, ih, n]], [[1, 0]]).
 word(conserved, [verb], [[k, ah, n, s, er, v, d]], [[0, 1]]).
 word(oak, [noun], [[ow, k]], [[1]]).
@@ -25600,7 +25600,7 @@ word(kumler, [noun], [[k, ah, m, l, er]], [[1, 0]]).
 word(yarmulke, [noun], [[y, aa, r, m, ah, l, k, ah], [y, aa, r, m, ah, k, ah]], [[1, 2, 0], [1, 0, 0]]).
 word(scantily, [adverb], [[s, k, ae, n, t, ah, l, iy]], [[1, 0, 0]]).
 word(gottfried, [noun], [[g, ao, t, f, r, iy, d]], [[1, 0]]).
-word(jewish, [noun_phrase], [[jh, uw, ih, sh]], [[1, 0]]).
+word(jewish, [adjective], [[jh, uw, ih, sh]], [[1, 0]]).
 word(joes, [plural], [[jh, ow, z]], [[1]]).
 word(laminar, [adjective], [[l, ae, m, ih, n, er]], [[1, 0, 0]]).
 word(hipbone, [noun], [[hh, ih, p, b, ow, n]], [[1, 1]]).
@@ -36304,7 +36304,7 @@ word(ranking, [adjective, noun], [[r, ae, ng, k, ih, ng]], [[1, 0]]).
 word(dorothea, [noun], [[d, ao, r, ah, th, iy, ah]], [[2, 0, 1, 0]]).
 word(distracted, [adjective], [[d, ih, s, t, r, ae, k, t, ah, d], [d, ih, s, t, r, ae, k, t, ih, d]], [[0, 1, 0], [0, 1, 0]]).
 word(limp, [intransitive_verb, noun, adjective], [[l, ih, m, p]], [[1]]).
-word(a, [noun], [[ah], [ey]], [[0], [1]]).
+word(a, [indefinite_article, noun], [[ah], [ey]], [[0], [1]]).
 word(lambaste, [transitive_verb], [[l, ae, m, b, ae, s, t], [l, ae, m, b, ey, s, t]], [[2, 1], [2, 1]]).
 word(prone, [adjective], [[p, r, ow, n]], [[1]]).
 word(rhapsodize, [verb, intransitive_verb], [[r, ae, p, s, ah, d, ay, z]], [[1, 0, 2]]).
@@ -39110,7 +39110,7 @@ word(botany, [noun], [[b, aa, t, ah, n, iy]], [[1, 0, 0]]).
 word(hoeing, [verb], [[hh, ow, ih, ng]], [[1, 0]]).
 word(frostbite, [noun], [[f, r, ao, s, t, b, ay, t]], [[1, 2]]).
 word(yourself, [pronoun], [[y, er, s, eh, l, f], [y, uh, r, s, eh, l, f], [y, ao, r, s, eh, l, f]], [[0, 1], [0, 1], [1, 0]]).
-word(stand-up, [noun_phrase], [[s, t, ae, n, d, ah, p]], [[1, 2]]).
+word(stand-up, [adjective, noun], [[s, t, ae, n, d, ah, p]], [[1, 2]]).
 word(apicella, [noun], [[aa, p, ih, s, eh, l, ah]], [[2, 0, 1, 0]]).
 word(hooky, [noun], [[hh, uh, k, iy]], [[1, 0]]).
 word(capsule, [noun], [[k, ae, p, s, ah, l]], [[1, 0]]).
@@ -42455,7 +42455,7 @@ word(brandenburger, [noun], [[b, r, ae, n, d, ah, n, b, er, g, er]], [[1, 0, 0, 
 word(chrisman, [noun], [[k, r, ih, s, m, ah, n]], [[1, 0]]).
 word(schism, [noun], [[s, k, ih, z, ah, m]], [[1, 0]]).
 word(engel, [noun], [[eh, n, g, ah, l]], [[1, 0]]).
-word(researcher, [noun_phrase], [[r, iy, s, er, ch, er]], [[1, 0, 0]]).
+word(researcher, [researcher], [[r, iy, s, er, ch, er]], [[1, 0, 0]]).
 word(uncritically, [adverb], [[ah, n, k, r, ih, t, ih, k, ah, l, iy], [ah, n, k, r, ih, t, ih, k, l, iy]], [[0, 1, 0, 0, 0], [0, 1, 0, 0]]).
 word(burgee, [noun], [[b, er, g, iy]], [[1, 0]]).
 word(shyster, [noun], [[sh, ay, s, t, er]], [[1, 0]]).
