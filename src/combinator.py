@@ -59,18 +59,18 @@ for word in edict :
 			if syllable[-1].isdigit() :
 				stress += syllable[-1]
 				stress += ', '
-				pronunciation += syllable[:-1]
+				pronunciation += syllable[:-1].lower()
 				pronunciation += ', '
 			else :
-				pronunciation += syllable
+				pronunciation += syllable.lower()
 				pronunciation += ', '
 		stress = stress[:-2] + ']'
 		pronunciation = pronunciation[:-2] + ']'
 		stresses.append(stress)
 		pronunciations.append(pronunciation)
 		
-	rule = "word("
-	rule = rule + word + ", " + part_of_speeches + '['
+	rule = "word(\""
+	rule = rule + word + "\", " + part_of_speeches + '['
 	rule += ', '.join(pronunciations)
 	rule += '], ['
 	rule += ', '.join(stresses)
