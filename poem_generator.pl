@@ -138,18 +138,24 @@ plural([Term | L],L) :- word_to_roles(Term, Roles), member(plural, Roles).
 preposition([Term | L],L) :- word_to_roles(Term, Roles), member(preposition, Roles).
 
 % Utility list operations
+head_match([H|_], [H|_]).
 
-% True if there exists a non-empty common prefix
-prefix_match(A, B) :- prefix_match(A, B, _).
-prefix_match(A, B, Result) :- prefix_match(A, B, [], Result).
-prefix_match([], _, Result, Result) :- Result \= [].
-prefix_match(_, [], Result, Result) :- Result \= [].
-prefix_match([HA|_], [HB|_], Result, Result) :- HA \= HB, Result \= [].
-prefix_match([H|A], [H|B], State, Result) :- prefix_match(A, B, [H|State], Result).
+prefix_match(_, []).
+prefix_match([], _).
+prefix_match([], []).
+prefix_match([H|LA], [H|LB]) :- prefix_match(LA, LB).
 
-% True if there exists a non-empty common suffix
-suffix_match(A, B) :- suffix_match(A, B, _).
-suffix_match(A, B, Result) :- reverse(A, RA), reverse(B, RB), prefix_match(RA, RB, Result).
+% % True if there exists a non-empty common prefix
+% prefix_match(A, B) :- prefix_match(A, B, _).
+% prefix_match(A, B, Result) :- prefix_match(A, B, [], Result).
+% prefix_match([], _, Result, Result) :- Result \= [].
+% prefix_match(_, [], Result, Result) :- Result \= [].
+% prefix_match([HA|_], [HB|_], Result, Result) :- HA \= HB, Result \= [].
+% prefix_match([H|A], [H|B], State, Result) :- prefix_match(A, B, [H|State], Result).
+
+% % True if there exists a non-empty common suffix
+% suffix_match(A, B) :- suffix_match(A, B, _).
+% suffix_match(A, B, Result) :- reverse(A, RA), reverse(B, RB), prefix_match(RA, RB, Result).
 
 % True if element is not a member
 none(E, L) :- \+ member(E, L).
@@ -157,6 +163,10 @@ none(E, L) :- \+ member(E, L).
 % True if L only consists of E
 only(E, [E]).
 only(E, [E|L]) :- only(E, L).
+
+% Get Nth element of list
+nth(0, [E|_], E).
+nth(N, [_|L], E) :- N > 0, M is N - 1, nth(M, L, E).
 
 % Count the number of occurrences of E in L
 count(E, L, C) :- count(E, L, 0, C).
@@ -193,68 +203,159 @@ words_to_rhythms([H|L], State, Result) :- word_to_rhythms(H, RhythmList), member
 % Computes the sequence length in terms of syllables
 syllabic_length(Words, Result) :- words_to_rhythms(Words, Rhythms), member(Rhythm, Rhythms), length(Rhythm, Result).
 
-% Computes a sequence of words of length N.
-n_length_words(N, Result) :- 
-    words(Words),
-    random_permutation(Words, RandomWords),
-    n_length_words(N, RandomWords, 0, [], Result).
-n_length_words(N, _, M, State, Result) :- N is M, reverse(State, Result).
-n_length_words(N, Words, Length, State, Result) :- 
-    Length < N, 
-    member(Word, Words), 
-    word_to_length(Word, WordLength),
-    Length + WordLength =< N,
-    n_length_words(N, Words, Length + WordLength, [Word|State], Result).
+% % Computes a sequence of words of length N.
+% n_length_words(N, Result) :- 
+%     words(Words),
+%     random_permutation(Words, RandomWords),
+%     n_length_words(N, RandomWords, 0, [], Result).
+% n_length_words(N, _, M, State, Result) :- N is M, reverse(State, Result).
+% n_length_words(N, Words, Length, State, Result) :- 
+%     Length < N, 
+%     member(Word, Words), 
+%     word_to_length(Word, WordLength),
+%     Length + WordLength =< N,
+%     n_length_words(N, Words, Length + WordLength, [Word|State], Result).
 
 
-% True if sequence A and B have common suffix syllables
-rhyme_match(A, B) :- 
-    words_to_syllables(A, SyllablesA), words_to_syllables(B, SyllablesB),
-    % writef('Possible Pronunciations: %w - %w \n', [A, SyllablesA]),
-    % writef('Possible Pronunciations: %w - %w \n', [B, SyllablesB]),
-    member(SyllableA, SyllablesA), member(SyllableB, SyllablesB),
-    % writef('Verifying Rhyme Match: %w - %w \n', [SyllableA, SyllableB]),
-    suffix_match(SyllableA, SyllableB).
+% % True if sequence A and B have common suffix syllables
+% rhyme_match(A, B) :- 
+%     words_to_syllables(A, SyllablesA), words_to_syllables(B, SyllablesB),
+%     % writef('Possible Pronunciations: %w - %w \n', [A, SyllablesA]),
+%     % writef('Possible Pronunciations: %w - %w \n', [B, SyllablesB]),
+%     member(SyllableA, SyllablesA), member(SyllableB, SyllablesB),
+%     % writef('Verifying Rhyme Match: %w - %w \n', [SyllableA, SyllableB]),
+%     suffix_match(SyllableA, SyllableB).
 
-% True if sequece A and B have the same rhythm sequence
-rhythm_match(A, B) :-
-    % syllabic_length(A, Length), syllabic_length(B, Length),
-    words_to_rhythms(A, RhythmsA), words_to_rhythms(B, RhythmsB),
-    % writef('Possible Rhythms: %w - %w \n', [A, RhythmsA]),
-    % writef('Possible Rhythms: %w - %w \n', [B, RhythmsB]),
-    member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB).
+% % True if sequece A and B have the same rhythm sequence
+% rhythm_match(A, B) :-
+%     % syllabic_length(A, Length), syllabic_length(B, Length),
+%     words_to_rhythms(A, RhythmsA), words_to_rhythms(B, RhythmsB),
+%     % writef('Possible Rhythms: %w - %w \n', [A, RhythmsA]),
+%     % writef('Possible Rhythms: %w - %w \n', [B, RhythmsB]),
+%     member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB).
 
-% Ensure sequences A and B match on rhyme and rhythm criteria
-match(A, B) :-
-    compound_sentence(A, []), compound_sentence(B, []), 
-    % writef('Verifying Rhyme: %w - %w \n', [A, B]),
-    rhyme_match(A, B),
-    % writef('Verifying Rhythm: %w - %w \n', [A, B]),
-    rhythm_match(A, B).
+% % Ensure sequences A and B match on rhyme and rhythm criteria
+% match(A, B) :-
+%     compound_sentence(A, []), compound_sentence(B, []), 
+%     % writef('Verifying Rhyme: %w - %w \n', [A, B]),
+%     rhyme_match(A, B),
+%     % writef('Verifying Rhythm: %w - %w \n', [A, B]),
+%     rhythm_match(A, B).
 
-% Generate list of text sequences of length N
-% N-length generator creates a finite working set
-generate(N, B) :-
-    aggregate_all(set(X), n_length_words(N, X), B).
+% % Generate list of text sequences of length N
+% % N-length generator creates a finite working set
+% generate(N, B) :-
+%     aggregate_all(set(X), n_length_words(N, X), B).
 
-% Entry point for match generator
-generate_match(A, B) :-
-    syllabic_length(A, N),
-    n_length_words(N, B),
-    A \= B,
-    writef('Verifying Sequence: %w \n', [B]),
-    match(A, B).
+% % Entry point for match generator
+% generate_match(A, B) :-
+%     syllabic_length(A, N),
+%     n_length_words(N, B),
+%     A \= B,
+%     writef('Verifying Sequence: %w \n', [B]),
+%     match(A, B).
 
 % TODO: Given a matrix representation of the input verse, find a mirror verse in the following method
 % If a line in the source matrix rhymes with a N-lines above it, the mirror verse should rhyme with those mirrored lines above it
 % If a line in the source matrix as X rhythm, the mirror line should also have X as it's rhythm
 % all mirror lines should be a valid compound sentence
 
+rhyming_index(CurrentLine, PreviousLines, Index) :- rhyming_index(CurrentLine, PreviousLines, false, Index).
+rhyming_index(_, _, true, _).
+rhyming_index(_, [], false, -1).
+rhyming_index(CurrentLine, [H|L], false, Index) :- rhyme_match(CurrentLine, H), rhyming_index(CurrentLine, [H|L], true, Index).
+rhyming_index(CurrentLine, [H|L], false, Index) :- \+ rhyme_match(CurrentLine, H), NextIndex is Index + 1, rhyming_index(CurrentLine, L, false, NextIndex).
 
-% Revise Search Order to perform intermediate checks.
+reverse_lists(Lists, Results) :- reverse_lists(Lists, [], Results).
+reverse_lists([], State, Results) :- reverse(State, Results).
+reverse_lists([H|L], State, Results) :- reverse(H, RH), reverse_lists(L, [RH|State], Results).
 
-% TODO: Implement Bayesian Objective
+validate_rhyme(Word, State, RS) :-
+    words_to_syllables([Word|State], Syllables), 
+    reverse_lists(Syllables, NRS),
+    validate_rhyme(RS, NRS).
+validate_rhyme_match(SyllablesA, SyllablesB) :- 
+    member(A, SyllablesA), member(B, SyllablesB), prefix_match(A, B).
 
+validate_rhythm(Word, State, RR) :-
+    words_to_syllables([Word|State], Rhythms), 
+    reverse_lists(Rhythms, NRR),
+    validate_rhythm_match(RR, NRR).
+validate_rhythm_match(RhythmsA, RhythmsB) :- 
+    member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB).
+
+
+build_line(RhymeLine, RhythmLine, Result) :- 
+    words_to_syllables(RhymeLine, Syllables), 
+    words_to_rhythms(RhythmLine, Rhythms),
+    reverse_lists(Syllables, RS),
+    reverse_lists(Rhythms, RR),
+    syllabic_length(RhythmLine, Length),
+    build_line(RR, RS, Length, [], Result).
+build_line(RhythmLine, Result) :-
+    words_to_rhythms(RhythmLine, Rhythms),
+    reverse_lists(Rhythms, RR),
+    syllabic_length(RhythmLine, Length),
+    build_line(RR, Length, [], Result).
+
+build_line(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+
+% Build line with rhyme constraint and rhythm constraint
+build_line(RR, RS, Length, State, Result) :-
+    words(Words),
+    member(Words, Word),
+    validate_rhythm(Word, State, RR),
+    validate_rhyme(Word, State, RS),
+    syllabic_length([Word|State], NL),
+    NewLength is Length - NL,
+    NewLength >= 0,
+    build_line(RR, NewLength, [Word|State], Result).
+
+% Build line with rhythm constraint
+build_line(RR, Length, State, Result) :-
+    words(Words),
+    member(Words, Word),
+    write(Word),
+    validate_rhythm(Word, State, RR),
+    syllabic_length([Word|State], NL),
+    NewLength is Length - NL,
+    NewLength >= 0,
+    build_line(RR, NewLength, [Word|State], Result).
+
+write_lines([]).
+write_lines([H|L]) :- write(H), nl(), write_lines(L).
+
+start :- 
+    write('What is the verse you would like to imitate?\n'),
+    read(Verse),
+    query(Verse),
+    start.
+
+query(Verse) :-
+    parse_verse(Verse, Sequences),
+    writef('Verse Parsed: %w\n', [Sequences]),
+    build_verse(Sequences, MirrorSequences),
+    writef('Verse Build: %w\n', [MirrorSequences]),
+    sequences_to_lines(MirrorSequences, MirrorLines),
+    write_lines(MirrorLines).
+
+build_verse(TemplateVerse, MirrorVerse) :- build_verse(TemplateVerse, [], [], MirrorVerse).
+build_verse([], _, State, MirrorVerse) :- reverse(State, MirrorVerse).
+build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
+    rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
+    RhymeIndex \= -1,
+    nth(RhymeIndex, State, RhymeLine),
+    build_line(RhymeLine, CurrentLine, BuiltLine),
+    BuiltLine \= CurrentLine,
+    build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
+build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
+    rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
+    RhymeIndex == -1,
+    build_line(CurrentLine, BuiltLine),
+    BuiltLine \= CurrentLine,
+    build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
+
+% Moon-shot: Implement Bayesian Objective
 % Moon-shot: normalize terms into modal synonym before bayesian scoring
 
 
@@ -273,9 +374,9 @@ verse_to_sequences(Verse, Words) :-
     verse_to_strings(Verse, Lines), 
     strings_to_sequences(Lines, Words).
 
-sequences_to_verse(Sequences, Verse) :- sequences_to_verse(Sequences, [], Verse).
-sequences_to_verse([], State, Verse) :- reverse(State, Lines), atomics_to_string(Lines, '\n', Verse).
-sequences_to_verse([H|L], State, Verse) :- atomics_to_string(H, '\s', String), sequences_to_verse(L, [String|State], Verse).
+sequences_to_lines(Sequences, Verse) :- sequences_to_lines(Sequences, [], Verse).
+sequences_to_lines([], State, Lines) :- reverse(State, Lines).
+sequences_to_lines([H|L], State, Verse) :- atomics_to_string(H, '\s', String), sequences_to_lines(L, [String|State], Verse).
 
 parse_verse(Verse, Lines) :-
     unknown_vocabulary(Verse, Unknown),
@@ -324,3 +425,5 @@ gsub(String, Pattern, Replacement, NewString) :-
 gsub(String, Pattern, _, String) :- \+ sub_string(String, _, _, _, Pattern).
 
 string_list(S, L) :- split_string(S, '', '', L).
+
+% :- start.
