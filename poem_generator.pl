@@ -13,7 +13,7 @@
 % parse_verse([], Structure, Sylllables, Rhythm).
 % parse_verse([Word|Tail], [Role|RT], Syllables, Rh) :- prop(Word, word, Role, Syllables, Rhythm).
 
-:- consult('small_dictionary.pl').
+:- consult('dictionary.pl').
 
 % General Dictionary Template
 % word(the, [definite_article, adverb, preposition], [[t͟hə]], [[0]]).
@@ -29,7 +29,7 @@
 % word(horn, [noun], [[h,ȯrn]], [[1]]).
 
 % Aggregate all words in the dictionary
-words(Words) :- aggregate_all(set(Word), word(Word, _, _, _), Words).
+words(RandomWords) :- aggregate_all(set(Word), word(Word, _, _, _), Words), random_permutation(Words, RandomWords).
 is_word(Word) :- word(Word, _, _, _).
 not_word(Word) :- \+ is_word(Word).
 roles(RoleType) :- aggregate_all(set(Role), word(_, Role, _, _), RolesList), flatten(RolesList, Roles), list_to_set(Roles, RolesSet), member(RoleType, RolesSet).
@@ -145,6 +145,11 @@ prefix_match([], _).
 prefix_match([], []).
 prefix_match([A], [A]).
 prefix_match([A, B|_], [A, B|_]).
+
+greedy_prefix_match(_, []).
+greedy_prefix_match([], _).
+greedy_prefix_match([], []).
+greedy_prefix_match([A|LA], [A|LB]) :- greedy_prefix_match(LA, LB).
 
 % % True if there exists a non-empty common prefix
 % prefix_match(A, B) :- prefix_match(A, B, _).
@@ -294,43 +299,58 @@ validate_rhythm(Word, State, RR) :-
     reverse_lists(Rhythms, NRR),
     validate_rhythm_match(RR, NRR).
 validate_rhythm_match(RhythmsA, RhythmsB) :- 
-    member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB), !.
+    member(A, RhythmsA), member(B, RhythmsB), greedy_prefix_match(A, B), !.
 
-build_line(Words, RhymeLine, RhythmLine, Result) :- 
+build_line(RhymeLine, RhythmLine, Result) :- 
     words_to_syllables(RhymeLine, Syllables), 
     words_to_rhythms(RhythmLine, Rhythms),
     reverse_lists(Syllables, RS),
     reverse_lists(Rhythms, RR),
     syllabic_length(RhythmLine, Length),
-    build_line_help(Words, RR, RS, Length, [], Result).
-build_line(Words, RhythmLine, Result) :-
+    words(Words),
+    build_line_help(Words, RS, RR, Length, [], Result).
+build_line(RhythmLine, Result) :-
     words_to_rhythms(RhythmLine, Rhythms),
     reverse_lists(Rhythms, RR),
     syllabic_length(RhythmLine, Length),
+    words(Words),
     build_line_help(Words, RR, Length, [], Result).
 
 % Build line with rhyme constraint and rhythm constraint
-build_line_help(_, _, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+% build_line_help(_, _, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
 build_line_help(_, _, _, 0, Result, Result).
-build_line_help(Words, RR, RS, Length, State, Result) :-
-    word(Word, _, _, _),
-    syllabic_length([Word|State], NL),
-    NewLength is Length - NL,
+build_line_help(Words, RS, RR, Length, State, Result) :-
+    member(Word, Words),
+    syllabic_length([Word], WL),
+    NewLength is Length - WL,
     NewLength >= 0,
     validate_rhythm(Word, State, RR),
     validate_rhyme(Word, State, RS),
-    build_line_help(Words, RR, NewLength, [Word|State], Result).
+    build_line_help(Words, RS, RR, NewLength, [Word|State], Result).
 
 % Build line with rhythm constraint
-build_line_help(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+% build_line_help(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
 build_line_help(_, _, 0, Result, Result).
 build_line_help(Words, RR, Length, State, Result) :-
-    word(Word, _, _, _),
-    syllabic_length([Word|State], NL),
-    NewLength is Length - NL,
+    member(Word, Words),
+    syllabic_length([Word], WL),
+    NewLength is Length - WL,
     NewLength >= 0,
     validate_rhythm(Word, State, RR),
     build_line_help(Words, RR, NewLength, [Word|State], Result).
+
+
+% build_line_help(Words, RR, Length, [cream], Result) :-
+%     member(ice, Words),
+%     syllabic_length([ice|[cream]], NL),
+%     NewLength is Length - NL,
+%     writef('Current State: %w\n', [[ice|[cream]]]),
+%     writef('Length: %w\n', [NewLength]),
+%     NewLength >= 0,
+%     validate_rhythm(Word, State, RR),
+%     writef('Current State: %w\n', [[Word|State]]),
+%     writef('Length: %w\n', [NewLength]),
+%     build_line_help(Words, RR, NewLength, [Word|State], Result).
 
 write_lines([]).
 write_lines([H|L]) :- write(H), nl(), write_lines(L).
@@ -339,6 +359,12 @@ start :-
     write('What is the verse you would like to imitate?\n'),
     read(Verse),
     query(Verse),
+    start.
+
+start :- 
+    write('What is the verse you would like to imitate?\n'),
+    read(Verse),
+    \+ query(Verse),
     start.
 
 query(Verse) :-
@@ -353,16 +379,16 @@ build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
     rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
     RhymeIndex \= -1,
     nth(RhymeIndex, State, RhymeLine),
-    words(Words),
-    build_line(Words, RhymeLine, CurrentLine, BuiltLine),
+    build_line(RhymeLine, CurrentLine, BuiltLine),
     BuiltLine \= CurrentLine,
+    writef('Building Line: %w\n', [BuiltLine]),
     build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
 build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
     rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
     RhymeIndex == -1,
-    words(Words),
-    build_line(Words, CurrentLine, BuiltLine),
+    build_line(CurrentLine, BuiltLine),
     BuiltLine \= CurrentLine,
+    writef('Building Line: %w\n', [BuiltLine]),
     build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
 
 % Moon-shot: Implement Bayesian Objective
