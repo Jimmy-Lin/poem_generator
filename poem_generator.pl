@@ -295,14 +295,12 @@ build_line(Words, RhythmLine, Result) :-
     words_to_rhythms(RhythmLine, Rhythms),
     reverse_lists(Rhythms, RR),
     syllabic_length(RhythmLine, Length),
-    writef('RR: %w\n', [RR]),
-    writef('Length: %w\n', [Length]),
     build_line_help(Words, RR, Length, [], Result).
 
 % Build line with rhyme constraint and rhythm constraint
 build_line_help(_, _, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
 build_line_help(Words, RR, RS, Length, State, Result) :-
-    member(Word, Words),
+    word(Word, _, _, _),
     syllabic_length([Word|State], NL),
     NewLength is Length - NL,
     NewLength >= 0,
@@ -313,12 +311,12 @@ build_line_help(Words, RR, RS, Length, State, Result) :-
 % Build line with rhythm constraint
 build_line_help(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
 build_line_help(Words, RR, Length, State, Result) :-
-    member(Word, Words),
+    word(Word, _, _, _),
     syllabic_length([Word|State], NL),
     NewLength is Length - NL,
     NewLength >= 0,
     validate_rhythm(Word, State, RR),
-    writef('Line Progress: %w\n', [State]),
+    writef('Line Progress: %w\n', [[Word|State]]),
     build_line_help(Words, RR, NewLength, [Word|State], Result).
 
 write_lines([]).
