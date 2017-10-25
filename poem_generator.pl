@@ -273,54 +273,53 @@ reverse_lists([H|L], State, Results) :- reverse(H, RH), reverse_lists(L, [RH|Sta
 validate_rhyme(Word, State, RS) :-
     words_to_syllables([Word|State], Syllables), 
     reverse_lists(Syllables, NRS),
-    validate_rhyme(RS, NRS).
+    validate_rhyme_match(RS, NRS).
 validate_rhyme_match(SyllablesA, SyllablesB) :- 
-    member(A, SyllablesA), member(B, SyllablesB), prefix_match(A, B).
+    member(A, SyllablesA), member(B, SyllablesB), prefix_match(A, B), !.
 
 validate_rhythm(Word, State, RR) :-
-    words_to_syllables([Word|State], Rhythms), 
+    words_to_rhythms([Word|State], Rhythms), 
     reverse_lists(Rhythms, NRR),
     validate_rhythm_match(RR, NRR).
 validate_rhythm_match(RhythmsA, RhythmsB) :- 
-    member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB).
+    member(CommonRhythm, RhythmsA), member(CommonRhythm, RhythmsB), !.
 
-
-build_line(RhymeLine, RhythmLine, Result) :- 
+build_line(Words, RhymeLine, RhythmLine, Result) :- 
     words_to_syllables(RhymeLine, Syllables), 
     words_to_rhythms(RhythmLine, Rhythms),
     reverse_lists(Syllables, RS),
     reverse_lists(Rhythms, RR),
     syllabic_length(RhythmLine, Length),
-    build_line(RR, RS, Length, [], Result).
-build_line(RhythmLine, Result) :-
+    build_line_help(Words, RR, RS, Length, [], Result).
+build_line(Words, RhythmLine, Result) :-
     words_to_rhythms(RhythmLine, Rhythms),
     reverse_lists(Rhythms, RR),
     syllabic_length(RhythmLine, Length),
-    build_line(RR, Length, [], Result).
-
-build_line(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+    writef('RR: %w\n', [RR]),
+    writef('Length: %w\n', [Length]),
+    build_line_help(Words, RR, Length, [], Result).
 
 % Build line with rhyme constraint and rhythm constraint
-build_line(RR, RS, Length, State, Result) :-
-    words(Words),
-    member(Words, Word),
+build_line_help(_, _, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+build_line_help(Words, RR, RS, Length, State, Result) :-
+    member(Word, Words),
+    syllabic_length([Word|State], NL),
+    NewLength is Length - NL,
+    NewLength >= 0,
     validate_rhythm(Word, State, RR),
     validate_rhyme(Word, State, RS),
-    syllabic_length([Word|State], NL),
-    NewLength is Length - NL,
-    NewLength >= 0,
-    build_line(RR, NewLength, [Word|State], Result).
+    build_line_help(Words, RR, NewLength, [Word|State], Result).
 
 % Build line with rhythm constraint
-build_line(RR, Length, State, Result) :-
-    words(Words),
-    member(Words, Word),
-    write(Word),
-    validate_rhythm(Word, State, RR),
+build_line_help(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+build_line_help(Words, RR, Length, State, Result) :-
+    member(Word, Words),
     syllabic_length([Word|State], NL),
     NewLength is Length - NL,
     NewLength >= 0,
-    build_line(RR, NewLength, [Word|State], Result).
+    validate_rhythm(Word, State, RR),
+    writef('Line Progress: %w\n', [State]),
+    build_line_help(Words, RR, NewLength, [Word|State], Result).
 
 write_lines([]).
 write_lines([H|L]) :- write(H), nl(), write_lines(L).
@@ -345,13 +344,15 @@ build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
     rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
     RhymeIndex \= -1,
     nth(RhymeIndex, State, RhymeLine),
-    build_line(RhymeLine, CurrentLine, BuiltLine),
+    words(Words),
+    build_line(Words, RhymeLine, CurrentLine, BuiltLine),
     BuiltLine \= CurrentLine,
     build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
 build_verse([CurrentLine|NextLines], PreviousLines, State, MirrorVerse) :-
     rhyming_index(CurrentLine, PreviousLines, RhymeIndex),
     RhymeIndex == -1,
-    build_line(CurrentLine, BuiltLine),
+    words(Words),
+    build_line(Words, CurrentLine, BuiltLine),
     BuiltLine \= CurrentLine,
     build_verse(NextLines, [CurrentLine|PreviousLines], [BuiltLine|State], MirrorVerse).
 
