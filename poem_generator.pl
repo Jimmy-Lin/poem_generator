@@ -13,7 +13,7 @@
 % parse_verse([], Structure, Sylllables, Rhythm).
 % parse_verse([Word|Tail], [Role|RT], Syllables, Rh) :- prop(Word, word, Role, Syllables, Rhythm).
 
-:- consult('dictionary.pl').
+:- consult('small_dictionary.pl').
 
 % General Dictionary Template
 % word(the, [definite_article, adverb, preposition], [[t͟hə]], [[0]]).
@@ -391,7 +391,7 @@ sequences_to_lines([H|L], State, Verse) :- atomics_to_string(H, '\s', String), s
 parse_verse(Verse, Lines) :-
     unknown_vocabulary(Verse, Unknown),
     length(Unknown, C), C > 0,
-    writef('Unrecognized Vocabulary: %w', [Unknown]),
+    writef('Unrecognized Vocabulary: %w\n', [Unknown]),
     Lines = [].
 
 parse_verse(Verse, Lines) :-
@@ -436,4 +436,4 @@ gsub(String, Pattern, _, String) :- \+ sub_string(String, _, _, _, Pattern).
 
 string_list(S, L) :- split_string(S, '', '', L).
 
-% :- start.
+:- start.
