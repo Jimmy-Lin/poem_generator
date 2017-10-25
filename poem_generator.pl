@@ -143,7 +143,7 @@ head_match([H|_], [H|_]).
 prefix_match(_, []).
 prefix_match([], _).
 prefix_match([], []).
-prefix_match([H|LA], [H|LB]) :- prefix_match(LA, LB).
+prefix_match([H|_], [H|_]).
 
 % % True if there exists a non-empty common prefix
 % prefix_match(A, B) :- prefix_match(A, B, _).
@@ -260,11 +260,22 @@ syllabic_length(Words, Result) :- words_to_rhythms(Words, Rhythms), member(Rhyth
 % If a line in the source matrix as X rhythm, the mirror line should also have X as it's rhythm
 % all mirror lines should be a valid compound sentence
 
-rhyming_index(CurrentLine, PreviousLines, Index) :- rhyming_index(CurrentLine, PreviousLines, false, Index).
-rhyming_index(_, _, true, _).
-rhyming_index(_, [], false, -1).
-rhyming_index(CurrentLine, [H|L], false, Index) :- rhyme_match(CurrentLine, H), rhyming_index(CurrentLine, [H|L], true, Index).
-rhyming_index(CurrentLine, [H|L], false, Index) :- \+ rhyme_match(CurrentLine, H), NextIndex is Index + 1, rhyming_index(CurrentLine, L, false, NextIndex).
+rhyme_match(A, B) :-
+    words_to_syllables(A, AS), words_to_syllables(B, BS),
+    member(AA, AS), member(BB, BS),
+    reverse(AA, RA), reverse(BB, RB),
+    prefix_match(RA, RB).
+
+rhyming_index(CurrentLine, PreviousLines, Index) :- rhyming_index(CurrentLine, PreviousLines, false, 0, Index).
+rhyming_index(_, _, true, Curr, Curr).
+rhyming_index(_, [], false, _, -1).
+rhyming_index(CurrentLine, [H|L], false, Curr, Index) :- 
+    rhyme_match(CurrentLine, H), 
+    rhyming_index(CurrentLine, [H|L], true, Curr, Index).
+rhyming_index(CurrentLine, [H|L], false, Curr, Index) :- 
+    \+ rhyme_match(CurrentLine, H), 
+    NextIndex is Curr + 1, 
+    rhyming_index(CurrentLine, L, false, NextIndex, Index).
 
 reverse_lists(Lists, Results) :- reverse_lists(Lists, [], Results).
 reverse_lists([], State, Results) :- reverse(State, Results).
@@ -299,6 +310,7 @@ build_line(Words, RhythmLine, Result) :-
 
 % Build line with rhyme constraint and rhythm constraint
 build_line_help(_, _, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+build_line_help(_, _, _, 0, Result, Result).
 build_line_help(Words, RR, RS, Length, State, Result) :-
     word(Word, _, _, _),
     syllabic_length([Word|State], NL),
@@ -310,13 +322,13 @@ build_line_help(Words, RR, RS, Length, State, Result) :-
 
 % Build line with rhythm constraint
 build_line_help(_, _, 0, Result, Result) :- compound_sentence(Result, []). % Final filter for grammatical correctness.
+build_line_help(_, _, 0, Result, Result).
 build_line_help(Words, RR, Length, State, Result) :-
     word(Word, _, _, _),
     syllabic_length([Word|State], NL),
     NewLength is Length - NL,
     NewLength >= 0,
     validate_rhythm(Word, State, RR),
-    writef('Line Progress: %w\n', [[Word|State]]),
     build_line_help(Words, RR, NewLength, [Word|State], Result).
 
 write_lines([]).
@@ -330,9 +342,7 @@ start :-
 
 query(Verse) :-
     parse_verse(Verse, Sequences),
-    writef('Verse Parsed: %w\n', [Sequences]),
     build_verse(Sequences, MirrorSequences),
-    writef('Verse Build: %w\n', [MirrorSequences]),
     sequences_to_lines(MirrorSequences, MirrorLines),
     write_lines(MirrorLines).
 
