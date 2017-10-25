@@ -143,7 +143,8 @@ head_match([H|_], [H|_]).
 prefix_match(_, []).
 prefix_match([], _).
 prefix_match([], []).
-prefix_match([H|_], [H|_]).
+prefix_match([A], [A]).
+prefix_match([A, B|_], [A, B|_]).
 
 % % True if there exists a non-empty common prefix
 % prefix_match(A, B) :- prefix_match(A, B, _).
